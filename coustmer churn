@@ -1,0 +1,163 @@
+import numpy as np
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
+df = df.dropna()
+
+encoder = LabelEncoder()
+
+for column in df.select_dtypes(include="object").columns:
+    df[column] = encoder.fit_transform(df[column])
+
+X = df.iloc[:, :-1]
+y = df.iloc[:, -1]
+
+X = np.array(X)
+y = np.array(y)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42
+)
+
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+model = LogisticRegression()
+
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+customer = pd.DataFrame([{
+    "gender": "Male",
+    "SeniorCitizen": 0,
+    "Partner": "Yes",
+    "Dependents": "No",
+    "tenure": 12,
+    "PhoneService": "Yes",
+    "MultipleLines": "No",
+    "InternetService": "DSL",
+    "OnlineSecurity": "No",
+    "OnlineBackup": "Yes",
+    "DeviceProtection": "No",
+    "TechSupport": "No",
+    "StreamingTV": "Yes",
+    "StreamingMovies": "No",
+    "Contract": "Month-to-month",
+    "PaperlessBilling": "Yes",
+    "PaymentMethod": "Electronic check",
+    "MonthlyCharges": 70.5,
+    "TotalCharges": 846.0
+}])
+
+for column in customer.select_dtypes(include="object").columns:
+    customer[column] = encoder.transform(customer[column])
+
+customer = np.array(customer)
+
+customer = scaler.transform(customer)
+
+prediction = model.predict(customer)
+
+if prediction[0] == 1:
+    print("Churn")
+else:
+    print("No Churn")
+
+import numpy as np
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
+df = df.dropna()
+
+encoder = LabelEncoder()
+
+for column in df.select_dtypes(include="object").columns:
+    df[column] = encoder.fit_transform(df[column])
+
+X = df.iloc[:, :-1]
+y = df.iloc[:, -1]
+
+X = np.array(X)
+y = np.array(y)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42
+)
+
+model = GradientBoostingClassifier()
+
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+import numpy as np
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
+df = df.dropna()
+
+encoder = LabelEncoder()
+
+for column in df.select_dtypes(include="object").columns:
+    df[column] = encoder.fit_transform(df[column])
+
+X = df.iloc[:, :-1]
+y = df.iloc[:, -1]
+
+X = np.array(X)
+y = np.array(y)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42
+)
+
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
