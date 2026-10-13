@@ -1,0 +1,351 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score,
+    f1_score, roc_auc_score
+)
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import (
+    RandomForestClassifier, GradientBoostingClassifier,
+    ExtraTreesClassifier, AdaBoostClassifier
+)
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+
+df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
+df.columns = df.columns.str.strip()
+df = df.replace(r"^\s*$", np.nan, regex=True)
+df = df.drop_duplicates()
+
+df["TotalCharges"] = pd.to_numeric(
+    df["TotalCharges"], errors="coerce"
+)
+df = df.dropna(subset=["TotalCharges", "Churn"])
+
+df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
+df = df.dropna(subset=["Churn"])
+
+X = df.drop(columns=["customerID", "Churn"])
+y = df["Churn"].astype(int)
+
+X_train_full, X_test, y_train_full, y_test = train_test_split(
+    X, y, test_size=0.20, random_state=42, stratify=y
+)
+
+X_train, X_val, y_train, y_val = train_test_split(
+    X_train_full, y_train_full,
+    test_size=0.25, random_state=42, stratify=y_train_full
+)
+
+X_train = pd.get_dummies(X_train, drop_first=True, dtype=int)
+X_val = pd.get_dummies(X_val, drop_first=True, dtype=int)
+X_val = X_val.reindex(columns=X_train.columns, fill_value=0)
+
+X_train_full = pd.get_dummies(
+    X_train_full, drop_first=True, dtype=int
+)
+X_train_full = X_train_full.reindex(
+    columns=X_train.columns, fill_value=0
+)
+
+X_test = pd.get_dummies(X_test, drop_first=True, dtype=int)
+X_test = X_test.reindex(columns=X_train.columns, fill_value=0)
+
+models = {
+    "Logistic Regression": lambda: LogisticRegression(
+        max_iter=2000, class_weight="balanced"
+    ),
+    "Random Forest": lambda: RandomForestClassifier(
+        n_estimators=300, random_state=42,
+        class_weight="balanced", n_jobs=-1
+    ),
+    "Gradient Boosting": lambda: GradientBoostingClassifier(
+        random_state=42
+    ),
+    "Decision Tree": lambda: DecisionTreeClassifier(
+        random_state=42, class_weight="balanced"
+    ),
+    "SVM": lambda: SVC(
+        probability=True, class_weight="balanced", random_state=42
+    ),
+    "Extra Trees": lambda: ExtraTreesClassifier(
+        n_estimators=300, random_state=42,
+        class_weight="balanced", n_jobs=-1
+    ),
+    "KNN": lambda: KNeighborsClassifier(n_neighbors=7),
+    "AdaBoost": lambda: AdaBoostClassifier(random_state=42)
+}
+
+scaled_models = {"Logistic Regression", "SVM", "KNN"}
+thresholds = np.round(np.arange(0.05, 0.951, 0.01), 2)
+
+all_results = []
+summary = []
+
+for name, create_model in models.items():
+    model = create_model()
+
+    if name in scaled_models:
+        scaler = StandardScaler()
+        train_data = scaler.fit_transform(X_train)
+        val_data = scaler.transform(X_val)
+    else:
+        train_data = X_train
+        val_data = X_val
+
+    model.fit(train_data, y_train)
+    val_prob = model.predict_proba(val_data)[:, 1]
+
+    best_threshold = None
+    best_recall = -1
+    best_precision = -1
+    best_f1 = -1
+
+    for threshold in thresholds:
+        val_pred = (val_prob >= threshold).astype(int)
+
+        precision = precision_score(
+            y_val, val_pred, zero_division=0
+        )
+        recall = recall_score(
+            y_val, val_pred, zero_division=0
+        )
+        f1 = f1_score(y_val, val_pred, zero_division=0)
+
+        all_results.append({
+            "Model": name,
+            "Threshold": threshold,
+            "Validation Precision": precision,
+            "Validation Recall": recall,
+            "Validation F1": f1
+        })
+
+        if precision >= 0.50:
+            if (
+                recall > best_recall
+                or (recall == best_recall and f1 > best_f1)
+            ):
+                best_threshold = threshold
+                best_recall = recall
+                best_precision = precision
+                best_f1 = f1
+
+    if best_threshold is None:
+        candidates = [
+            r for r in all_results if r["Model"] == name
+        ]
+        chosen = max(
+            candidates,
+            key=lambda r: (
+                r["Validation Recall"],
+                r["Validation Precision"]
+            )
+        )
+
+        best_threshold = chosen["Threshold"]
+        best_recall = chosen["Validation Recall"]
+        best_precision = chosen["Validation Precision"]
+        best_f1 = chosen["Validation F1"]
+
+    if name in scaled_models:
+        final_scaler = StandardScaler()
+        full_train_data = final_scaler.fit_transform(X_train_full)
+        test_data = final_scaler.transform(X_test)
+    else:
+        full_train_data = X_train_full
+        test_data = X_test
+
+    final_model = create_model()
+    final_model.fit(full_train_data, y_train_full)
+
+    test_prob = final_model.predict_proba(test_data)[:, 1]
+    test_pred = (test_prob >= best_threshold).astype(int)
+
+    summary.append({
+        "Model": name,
+        "Threshold": best_threshold,
+        "Validation Precision": best_precision,
+        "Validation Recall": best_recall,
+        "Validation F1": best_f1,
+        "Test Accuracy": accuracy_score(y_test, test_pred),
+        "Test Precision": precision_score(
+            y_test, test_pred, zero_division=0
+        ),
+        "Test Recall": recall_score(
+            y_test, test_pred, zero_division=0
+        ),
+        "Test F1": f1_score(y_test, test_pred, zero_division=0),
+        "Test ROC-AUC": roc_auc_score(y_test, test_prob)
+    })
+
+threshold_df = pd.DataFrame(all_results)
+summary_df = pd.DataFrame(summary)
+
+threshold_df.to_csv("all_thresholds.csv", index=False)
+
+summary_df.sort_values(
+    "Test Recall", ascending=False
+).to_csv("model_comparison.csv", index=False)
+
+print("\nALL THRESHOLDS:")
+print(threshold_df.to_string(index=False))
+
+print("\nFINAL COMPARISON:")
+print(
+    summary_df.sort_values(
+        "Test Recall", ascending=False
+    ).to_string(index=False)
+)
+import numpy as np
+import pandas as pd
+
+from sklearn.ensemble import (
+    GradientBoostingClassifier, RandomForestClassifier
+)
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.utils.class_weight import compute_sample_weight
+from sklearn.metrics import (
+    precision_score, recall_score, f1_score,
+    accuracy_score, roc_auc_score
+)
+
+weights = compute_sample_weight("balanced", y_train)
+
+gb_grid = {
+    "n_estimators": [100, 200, 300],
+    "learning_rate": [0.03, 0.05, 0.1],
+    "max_depth": [1, 2, 3],
+    "min_samples_leaf": [5, 10, 20]
+}
+
+gb_search = GridSearchCV(
+    GradientBoostingClassifier(random_state=42),
+    gb_grid,
+    scoring="average_precision",
+    cv=StratifiedKFold(
+        n_splits=5, shuffle=True, random_state=42
+    ),
+    n_jobs=-1
+)
+
+gb_search.fit(X_train, y_train, sample_weight=weights)
+
+rf_grid = {
+    "n_estimators": [200, 400],
+    "max_depth": [None, 10, 20],
+    "min_samples_leaf": [2, 5, 10],
+    "class_weight": ["balanced", "balanced_subsample"]
+}
+
+rf_search = GridSearchCV(
+    RandomForestClassifier(random_state=42, n_jobs=-1),
+    rf_grid,
+    scoring="average_precision",
+    cv=StratifiedKFold(
+        n_splits=5, shuffle=True, random_state=42
+    ),
+    n_jobs=-1
+)
+
+rf_search.fit(X_train, y_train)
+
+models = {
+    "Gradient Boosting": gb_search.best_estimator_,
+    "Random Forest": rf_search.best_estimator_
+}
+
+results = []
+
+for name, model in models.items():
+    val_prob = model.predict_proba(X_val)[:, 1]
+
+    thresholds = np.arange(0.10, 0.81, 0.01)
+    valid_thresholds = []
+
+    for threshold in thresholds:
+        val_pred = (val_prob >= threshold).astype(int)
+
+        precision = precision_score(
+            y_val, val_pred, zero_division=0
+        )
+        recall = recall_score(
+            y_val, val_pred, zero_division=0
+        )
+        f1 = f1_score(y_val, val_pred, zero_division=0)
+
+        if precision >= 0.50:
+            valid_thresholds.append(
+                (threshold, precision, recall, f1)
+            )
+
+    if valid_thresholds:
+        best = max(
+            valid_thresholds,
+            key=lambda x: (x[2], x[3])
+        )
+    else:
+        fallback = []
+
+        for threshold in thresholds:
+            val_pred = (val_prob >= threshold).astype(int)
+
+            fallback.append((
+                threshold,
+                precision_score(
+                    y_val, val_pred, zero_division=0
+                ),
+                recall_score(
+                    y_val, val_pred, zero_division=0
+                ),
+                f1_score(y_val, val_pred, zero_division=0)
+            ))
+
+        best = max(fallback, key=lambda x: (x[2], x[1]))
+
+    threshold = best[0]
+
+    test_prob = model.predict_proba(X_test)[:, 1]
+    test_pred = (test_prob >= threshold).astype(int)
+
+    results.append({
+        "Model": name,
+        "Threshold": round(threshold, 2),
+        "Validation Precision": round(best[1], 4),
+        "Validation Recall": round(best[2], 4),
+        "Validation F1": round(best[3], 4),
+        "Test Accuracy": round(
+            accuracy_score(y_test, test_pred), 4
+        ),
+        "Test Precision": round(
+            precision_score(y_test, test_pred, zero_division=0), 4
+        ),
+        "Test Recall": round(
+            recall_score(y_test, test_pred, zero_division=0), 4
+        ),
+        "Test F1": round(
+            f1_score(y_test, test_pred, zero_division=0), 4
+        ),
+        "Test ROC-AUC": round(
+            roc_auc_score(y_test, test_prob), 4
+        )
+    })
+
+print("BEST GRADIENT BOOSTING PARAMETERS:")
+print(gb_search.best_params_)
+
+print("\nBEST RANDOM FOREST PARAMETERS:")
+print(rf_search.best_params_)
+
+comparison = pd.DataFrame(results).sort_values(
+    "Test Recall", ascending=False
+)
+
+print("\nFINAL COMPARISON:")
+print(comparison.to_string(index=False))
+
+comparison.to_csv("tuned_model_comparison.csv", index=False)
