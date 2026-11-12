@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+all_thresholds.csv
+model_comparison.csv
+tuned_model_comparison.csv
+artifacts/
