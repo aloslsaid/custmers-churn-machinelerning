@@ -15,3 +15,18 @@ The project description mentions preprocessing, stratified splitting, Logistic R
 ## Privacy and testing
 
 Use only appropriately licensed data and do not add real customer records. No root test command is currently documented. Tests should cover input validation, missing values, leakage prevention, and stable prediction output.
+
+
+## Reproducible run
+
+The training script is the extensionless root file `coustmer churn 11`; run it from the repository root so it can find `WA_Fn-UseC_-Telco-Customer-Churn.csv`.
+
+```bash
+python -m venv .venv
+# Activate the environment, then:
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python "coustmer churn 11"
+```
+
+The script writes threshold and model-comparison CSV files in the working directory. Review its validation/test selection logic before treating reported test metrics as an unbiased final estimate; model selection should be completed using validation data only, with the test set held back until the final chosen model.
