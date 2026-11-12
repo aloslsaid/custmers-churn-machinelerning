@@ -15,3 +15,8 @@ The project description mentions preprocessing, stratified splitting, Logistic R
 ## Privacy and testing
 
 Use only appropriately licensed data and do not add real customer records. No root test command is currently documented. Tests should cover input validation, missing values, leakage prevention, and stable prediction output.
+
+
+## Methodology note
+
+Model comparison tables are now ranked by validation recall rather than test recall. The test split remains for final reporting and should not be used to select the model.
