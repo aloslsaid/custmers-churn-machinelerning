@@ -1,63 +1,17 @@
-# custmer churn
-Machine Learning project for predicting customer churn using the Telco Customer Churn dataset. The project includes data preprocessing, feature encoding, train/test splitting, scaling, and Logistic Regression classification. Model performance is evaluated using Accuracy, Precision, Recall, and F1-score, with predictions made for new customers.
-Customer Churn Prediction
+# Customer Churn Prediction
 
-This project predicts whether a customer is likely to leave a service.
+An educational binary-classification project for predicting customer churn from the Telco Customer Churn dataset. The repository includes `WA_Fn-UseC_-Telco-Customer-Churn.csv` and a project file named `coustmer churn 11`; inspect the latter to determine whether it is a notebook, script, or another file type.
 
-I used the Telco Customer Churn dataset for this project.
+## Setup
 
-I started by loading the data and checking its columns and data types.
+1. Clone or download the repository.
+2. Review the dataset source/license and inspect its column names, especially the target column.
+3. Inspect `coustmer churn 11` for its expected Python version, entry point, and data path.
+4. Create a virtual environment and install dependencies identified from the source. No root `requirements.txt` is currently listed.
+5. Follow the code's run instructions; no verified command is available from the root file listing.
 
-Before training the model, I inspected the dataset for missing values.
+The project description mentions preprocessing, stratified splitting, Logistic Regression, and accuracy/precision/recall/F1 evaluation. This README does not claim that a particular result has been reproduced. Fit preprocessing only on training data, compare against a baseline, and consider class imbalance and the costs of false negatives.
 
-I also found that some numerical values were stored as text.
+## Privacy and testing
 
-I converted those columns into proper numerical values.
-
-After that, I checked the missing values again and handled them.
-
-I removed the customer ID because it doesn’t provide useful information for prediction.
-
-The target column was Churn, which contains Yes and No values.
-
-I converted these values into 1 and 0 so the model could use them.
-
-The dataset also contained many categorical features.
-
-I encoded these features into numerical values.
-
-After preprocessing, I separated the input features from the target.
-
-Then I split the data into training and testing sets.
-
-I used stratification so the class distribution stayed similar in both sets.
-
-I also scaled the features before training the model.
-
-For the first model, I used Logistic Regression.
-
-I chose it because it is simple, fast, and works well as a classification baseline.
-
-After training, I generated predictions for the test data.
-
-I evaluated the model using Accuracy, Precision, Recall, and F1-score.
-
-I wanted to look beyond accuracy because missing actual churners can be important.
-
-The confusion matrix also helped me understand the model’s mistakes.
-
-During the project, I checked each preprocessing step instead of training directly on the raw dataset.
-
-This helped me understand how data preparation affects classification.
-
-The project gave me practical experience with binary classification.
-
-It also helped me understand why different evaluation metrics are useful for different problems.
-
-what i used
-
-Python, Pandas, NumPy, Matplotlib, and Scikit-learn.
-
-Future Improvements
-
-I would like to test Random Forest and Gradient Boosting, add ROC-AUC analysis, tune the classification threshold, and deploy the model.
+Use only appropriately licensed data and do not add real customer records. No root test command is currently documented. Tests should cover input validation, missing values, leakage prevention, and stable prediction output.
