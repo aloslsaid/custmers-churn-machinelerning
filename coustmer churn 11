@@ -189,7 +189,7 @@ summary_df = pd.DataFrame(summary)
 threshold_df.to_csv("all_thresholds.csv", index=False)
 
 summary_df.sort_values(
-    "Test Recall", ascending=False
+    "Validation Recall", ascending=False
 ).to_csv("model_comparison.csv", index=False)
 
 print("\nALL THRESHOLDS:")
@@ -198,7 +198,7 @@ print(threshold_df.to_string(index=False))
 print("\nFINAL COMPARISON:")
 print(
     summary_df.sort_values(
-        "Test Recall", ascending=False
+        "Validation Recall", ascending=False
     ).to_string(index=False)
 )
 import numpy as np
@@ -342,7 +342,7 @@ print("\nBEST RANDOM FOREST PARAMETERS:")
 print(rf_search.best_params_)
 
 comparison = pd.DataFrame(results).sort_values(
-    "Test Recall", ascending=False
+    "Validation Recall", ascending=False
 )
 
 print("\nFINAL COMPARISON:")
