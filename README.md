@@ -1,17 +1,43 @@
 # Customer Churn Prediction
 
-An educational binary-classification project for predicting customer churn from the Telco Customer Churn dataset. The repository includes `WA_Fn-UseC_-Telco-Customer-Churn.csv` and a project file named `coustmer churn 11`; inspect the latter to determine whether it is a notebook, script, or another file type.
+A binary classification experiment using the Telco Customer Churn dataset. The target is whether a customer churned (`Yes` / `No`).
+
+## Dataset
+
+- File: `WA_Fn-UseC_-Telco-Customer-Churn.csv`
+- Target: `Churn`
+- `customerID` is excluded from model features.
+- `TotalCharges` is converted to numeric and invalid target/charge rows are excluded.
+
+Verify the dataset's original source and redistribution license before publishing or reusing it.
 
 ## Setup
 
-1. Clone or download the repository.
-2. Review the dataset source/license and inspect its column names, especially the target column.
-3. Inspect `coustmer churn 11` for its expected Python version, entry point, and data path.
-4. Create a virtual environment and install dependencies identified from the source. No root `requirements.txt` is currently listed.
-5. Follow the code's run instructions; no verified command is available from the root file listing.
+Python 3.10+:
 
-The project description mentions preprocessing, stratified splitting, Logistic Regression, and accuracy/precision/recall/F1 evaluation. This README does not claim that a particular result has been reproduced. Fit preprocessing only on training data, compare against a baseline, and consider class imbalance and the costs of false negatives.
+```bash
+python -m venv .venv
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python train.py
+```
 
-## Privacy and testing
+## Methodology
 
-Use only appropriately licensed data and do not add real customer records. No root test command is currently documented. Tests should cover input validation, missing values, leakage prevention, and stable prediction output.
+The script uses stratified train/validation/test splits, compares multiple classifiers, evaluates decision thresholds on validation data, and reports final test metrics. Class imbalance is considered through class weighting and threshold selection. Outputs include per-threshold validation results and model comparison CSVs.
+
+## Metrics and responsible interpretation
+
+Accuracy alone is insufficient for churn detection. Review precision, recall, F1 and ROC-AUC, and choose an operating threshold based on the business cost of false positives and false negatives. Do not claim that higher recall is automatically better without considering intervention cost and customer impact.
+
+The current script includes an exploratory first model comparison and a tuned follow-up section in one execution. Treat the final output as an experiment, not a production-ready churn system. Record the dataset version and actual run results.
+
+## Privacy
+
+Use only appropriately licensed or synthetic customer data. Never commit real customer records or personal identifiers.
+
+## License
+
+No license is declared. All rights reserved unless the repository owner adds an explicit license.
