@@ -1,17 +1,48 @@
 # Customer Churn Prediction
 
-An educational binary-classification project for predicting customer churn from the Telco Customer Churn dataset. The repository includes `WA_Fn-UseC_-Telco-Customer-Churn.csv` and a project file named `coustmer churn 11`; inspect the latter to determine whether it is a notebook, script, or another file type.
+> A binary-classification study that estimates which telecom customers are more likely to discontinue service.
 
-## Setup
+## Project objective
+Customer churn is a business problem: losing an existing customer can affect recurring revenue and increase acquisition costs. This project uses the Telco Customer Churn dataset to explore how customer account and service attributes relate to churn, then compares classification models and decision thresholds.
 
-1. Clone or download the repository.
-2. Review the dataset source/license and inspect its column names, especially the target column.
-3. Inspect `coustmer churn 11` for its expected Python version, entry point, and data path.
-4. Create a virtual environment and install dependencies identified from the source. No root `requirements.txt` is currently listed.
-5. Follow the code's run instructions; no verified command is available from the root file listing.
+## Workflow
+1. Load the Telco dataset from `WA_Fn-UseC_-Telco-Customer-Churn.csv`.
+2. Normalize column names, convert blank values to missing values, and remove duplicate rows.
+3. Convert `TotalCharges` to numeric and remove rows without a valid target or required charge value.
+4. Encode the target `Churn` as a binary label: Yes = 1, No = 0.
+5. Exclude the customer identifier from model inputs.
+6. Create stratified training, validation, and test splits to preserve the class distribution.
+7. One-hot encode categorical features and align validation/test columns with the training feature set.
+8. Compare multiple classifiers, including Logistic Regression, Random Forest, Gradient Boosting, Decision Tree, SVM, Extra Trees, KNN, and AdaBoost.
+9. Search decision thresholds on validation probabilities rather than assuming 0.50 is always optimal.
+10. Evaluate the selected model on held-out test data.
 
-The project description mentions preprocessing, stratified splitting, Logistic Regression, and accuracy/precision/recall/F1 evaluation. This README does not claim that a particular result has been reproduced. Fit preprocessing only on training data, compare against a baseline, and consider class imbalance and the costs of false negatives.
+## Why threshold tuning matters
+A churn model is not only about accuracy. A business may prefer higher recall to identify more customers at risk, while still needing acceptable precision to avoid wasting retention resources. The script evaluates precision, recall, and F1 across candidate thresholds and uses a precision constraint when selecting a threshold.
 
-## Privacy and testing
+## Metrics
+The experiment includes Accuracy, Precision, Recall, F1-score, and ROC-AUC where available. No single metric describes every business use case; the appropriate operating threshold depends on the cost of false positives and false negatives.
 
-Use only appropriately licensed data and do not add real customer records. No root test command is currently documented. Tests should cover input validation, missing values, leakage prevention, and stable prediction output.
+## Run locally
+Python 3.10+ is recommended.
+```bash
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install pandas numpy scikit-learn
+python "coustmer churn 11"
+```
+Run the command from the repository root because the script reads the CSV using a relative path.
+
+## Repository contents
+- `WA_Fn-UseC_-Telco-Customer-Churn.csv` — input dataset.
+- `coustmer churn 11` — Python classification experiment.
+
+## Responsible interpretation
+Predicted churn is a probability or risk signal, not proof that a customer will leave. Use predictions to support fair, helpful retention analysis—not to deny service or make consequential decisions automatically. Dataset quality, class imbalance, threshold choice, and validation design all affect the result.
+
+## Skills demonstrated
+Binary classification · Customer analytics · Data cleaning · Categorical encoding · Stratified sampling · Threshold optimization · Model comparison · Classification metrics
